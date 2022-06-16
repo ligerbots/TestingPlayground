@@ -5,8 +5,10 @@
 package frc.robot.subsystems;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
+import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.math.util.Units;
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.simulation.AnalogGyroSim;
 import edu.wpi.first.wpilibj.simulation.DifferentialDrivetrainSim;
@@ -33,7 +36,7 @@ public class DriveTrain extends SubsystemBase {
   private EncoderSim m_rightEncoderSim = new EncoderSim(m_rightEncoder);
 
   private AnalogGyro m_gyro = new AnalogGyro(1);
-
+  
   private AnalogGyroSim m_gyroSim = new AnalogGyroSim(m_gyro);
 
   private DifferentialDrivetrainSim m_driveSim = new DifferentialDrivetrainSim(
@@ -45,30 +48,42 @@ public class DriveTrain extends SubsystemBase {
 
     VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005));
      
-  private PWMSparkMax m_leftMotor = new PWMSparkMax(0);
-  private PWMSparkMax m_rightMotor = new PWMSparkMax(1);
+
+  private MotorControllerGroup m_leftMotors = new MotorControllerGroup(new PWMSparkMax(0), new PWMSparkMax(1));
+  private MotorControllerGroup m_rightMotors = new MotorControllerGroup(new PWMSparkMax(2), new PWMSparkMax(3));
+
+  private DifferentialDrive m_drive = new DifferentialDrive(m_leftMotors, m_rightMotors);
 
   private Field2d m_field = new Field2d();
 
-  private DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(0));
+  private DifferentialDriveOdometry m_odometry;
 
   public DriveTrain() {
+    m_rightMotors.setInverted(true); 
+
     m_leftEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
     m_rightEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
 
+    m_leftEncoder.reset();
+    m_rightEncoder.reset();
+    m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(0));
     SmartDashboard.putData("Field", m_field);
   }
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     m_odometry.update(m_gyro.getRotation2d(), m_leftEncoder.getDistance(), m_rightEncoder.getDistance());
     m_field.setRobotPose(m_odometry.getPoseMeters());
   }
 
   @Override
   public void simulationPeriodic(){
-    m_driveSim.setInputs(m_leftMotor.get()* RobotController.getInputVoltage(), m_rightMotor.get()* RobotController.getInputVoltage());
+    m_driveSim.setInputs(m_leftMotors.get()* RobotController.getInputVoltage(), m_rightMotors.get()* RobotController.getInputVoltage());
+
+    // To fix the error:
+    // Error at edu.wpi.first.wpilibj.MotorSafety.check(MotorSafety.java:96): DifferentialDrive... Output not updated often enough
+    // advances the update period by 20 ms
+    m_driveSim.update(0.02);
 
     m_leftEncoderSim.setDistance(m_driveSim.getLeftPositionMeters());
     m_leftEncoderSim.setRate(m_driveSim.getLeftVelocityMetersPerSecond());
@@ -76,5 +91,19 @@ public class DriveTrain extends SubsystemBase {
     m_rightEncoderSim.setRate(m_driveSim.getRightVelocityMetersPerSecond());
     m_gyroSim.setAngle(-m_driveSim.getHeading().getDegrees());
 
+  }
+
+  public Pose2d getPose(){
+    return m_odometry.getPoseMeters();
+  }
+
+  public void tankDriveVolts(double leftVolts, double rightVolts){
+    m_leftMotors.setVoltage(leftVolts);
+    m_rightMotors.setVoltage(rightVolts);
+    m_drive.feed();
+  }
+
+  public DifferentialDriveWheelSpeeds getWheelSpeeds() {
+    return new DifferentialDriveWheelSpeeds(m_leftEncoder.getRate(), m_rightEncoder.getRate());
   }
 }
