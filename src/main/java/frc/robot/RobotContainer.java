@@ -4,9 +4,15 @@
 
 package frc.robot;
 
+import java.util.function.DoubleSupplier;
+
+import javax.swing.plaf.basic.BasicSplitPaneUI.KeyboardEndHandler;
+
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.commands.DriveCommand;
 import frc.robot.subsystems.DriveTrain; 
 
 /**
@@ -19,6 +25,14 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
   private DriveTrain m_driveTrain = new DriveTrain();
+
+  // to control with keyboard, use a and d on the 4th axis
+  // because the port for the axis on the xbox controller is number 4
+  // Axis.kRightX.value = 4
+  private XboxController m_xbox = new XboxController(0);
+
+  private final DriveCommand m_driveCommand = new DriveCommand(m_driveTrain, new Throttle(), new Turn());
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the button bindings
@@ -31,9 +45,7 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  private void configureButtonBindings() {
-    
-  }
+  private void configureButtonBindings() {}
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -43,5 +55,23 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An ExampleCommand will run in autonomous
     return null;
+  }
+
+  public DriveCommand getDriveCommand(){
+    return m_driveCommand;
+  }
+
+  private class Throttle implements DoubleSupplier {
+    @Override
+    public double getAsDouble() {
+      return -m_xbox.getLeftY();
+    }
+  }
+
+  private class Turn implements DoubleSupplier {
+    @Override
+    public double getAsDouble() {
+      return -0.75 * m_xbox.getRightX();
+    }
   }
 }
