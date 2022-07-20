@@ -47,6 +47,7 @@ public class AutoRoutine extends SequentialCommandGroup {
         .setKinematics(Constants.kDriveKinematics)
         // Apply the voltage constraint
         .addConstraint(autoVoltageConstraint);
+        // add .setReversed(true); to make the robot go backwards
 
     Trajectory traj =
     TrajectoryGenerator.generateTrajectory(
