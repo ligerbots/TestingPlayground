@@ -60,7 +60,7 @@ public class DriveTrain extends SubsystemBase {
     m_rightEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
 
     m_leftEncoder.reset();
-    m_leftEncoder.reset();
+    m_rightEncoder.reset();
 
     m_differentialDrive.setSafetyEnabled(false);
     
