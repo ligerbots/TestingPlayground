@@ -3,7 +3,6 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -44,7 +43,7 @@ public class DriveTrain extends SubsystemBase {
 
   //make a differential drive
   /*
-  This differential drive constructor takes the following parameters:
+  This differential drive sim constructor takes the following parameters:
   The type and number of motors on one side of the drivetrain.
   The gear ratio between the motors and the wheels as output torque over input torque (this number is usually greater than 1 for drivetrains).
   The moment of inertia of the drivetrain (this can be obtained from a CAD model of your drivetrain. Usually, this is between 3 and 8 ).
@@ -78,7 +77,7 @@ public class DriveTrain extends SubsystemBase {
   //give motors random unique numbers bc simulate ports
 
 
-  private DifferentialDrive m_differentialDrive = new DifferentialDrive(m_leftMotors, m_rightMotors);
+  private DifferentialDrive m_differentialDrive = new DifferentialDrive(m_leftMotors, m_rightMotors); //makes a differential drive
 
   private Field2d m_field = new Field2d(); //constructing a field
 
