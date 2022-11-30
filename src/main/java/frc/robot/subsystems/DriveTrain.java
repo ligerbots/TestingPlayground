@@ -24,32 +24,33 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
-public class DriveTrain extends SubsystemBase {
-  /** Creates a new DriveTrain. */
+public class DriveTrain extends SubsystemBase {  
   // These represent our regular encoder objects, which we would
   // create to use on a real robot.
-  private Encoder m_leftEncoderSim = new Encoder(0, 1); //4 unique #s to act as ports
-  private Encoder m_rightEncoderSim = new Encoder(2, 3);
+  private Encoder m_leftEncoder = new Encoder(0, 1); //4 unique #s to act as ports
+  private Encoder m_rightEncoder = new Encoder(2, 3);
+
+  //make corresponding encoders to convert to EncoderSim
+  private EncoderSim m_leftEncoderSim = new EncoderSim(m_leftEncoder);
+  private EncoderSim m_rightEncoderSim = new EncoderSim(m_rightEncoder);
+
 
   // Create our gyro object like we would on a real robot.
-  private AnalogGyro m_gyroSim = new AnalogGyro(1); //used to measure tilt
+  private AnalogGyro m_gyro = new AnalogGyro(1); //used to measure tilt
+
+  //make corresponding gyroSim
+  private AnalogGyroSim m_gyroSim = new AnalogGyroSim(m_gyro);
+
 
   //make a differential drive
   /*
   This differential drive constructor takes the following parameters:
-
   The type and number of motors on one side of the drivetrain.
-
   The gear ratio between the motors and the wheels as output torque over input torque (this number is usually greater than 1 for drivetrains).
-
   The moment of inertia of the drivetrain (this can be obtained from a CAD model of your drivetrain. Usually, this is between 3 and 8 ).
-
   The mass of the drivetrain (it is recommended to use the mass of the entire robot itself, as it will more accurately model the acceleration characteristics of your robot for trajectory tracking).
-
   The radius of the drive wheels.
-
   The track width (distance between left and right wheels).
-
   Standard deviations of measurement noise: this represents how much measurement noise you expect from your real sensors. The measurement noise is an array with 7 elements, with each element representing the standard deviation of measurement noise in x, y, heading, left velocity, right velocity, left position, and right position respectively. This option can be omitted in C++ or set to null in Java if measurement noise is not desirable.
   */
   // Create the simulation model of our drivetrain.
@@ -69,12 +70,12 @@ public class DriveTrain extends SubsystemBase {
   // l and r velocity: 0.1   m/s
   // l and r position: 0.005 m
   VecBuilder.fill(0.001, 0.001, 0.001, 0.1, 0.1, 0.005, 0.005));
-  //most things not used in real robots
+  //most things inputed to constructor not used in real robots
 
-  //create fake motors
+  //create motor groups, groups front and back left together and same for right to make easier to control
   private MotorControllerGroup m_leftMotors = new MotorControllerGroup(new PWMSparkMax(0), new PWMSparkMax(1));
   private MotorControllerGroup m_rightMotors = new MotorControllerGroup(new PWMSparkMax(2), new PWMSparkMax(3));
-  //give motors random numbers bc simulate ports
+  //give motors random unique numbers bc simulate ports
 
 
   private DifferentialDrive m_differentialDrive = new DifferentialDrive(m_leftMotors, m_rightMotors);
@@ -89,13 +90,14 @@ public class DriveTrain extends SubsystemBase {
 
   public DriveTrain() {   //creates a new DriveTrain, initializer
 
-    //m_leftEncoderSim.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
+    //m_leftEncoder.setDistancePerPulse(2 * Math.PI * kWheelRadius / kEncoderResolution);
     //make a constant for the Math.PI * ...etc...
-    m_leftEncoderSim.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
-    m_rightEncoderSim.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
+    //put this equations on the real encoder
+    m_leftEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
+    m_rightEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
     
-    m_leftEncoderSim.reset(); //reset encoders when make this drivetrain, no carry over
-    m_rightEncoderSim.reset();
+    m_leftEncoder.reset(); //reset encoders when make this drivetrain, no carry over
+    m_rightEncoder.reset();
 
     m_differentialDrive.setSafetyEnabled(false);
     
@@ -108,9 +110,9 @@ public class DriveTrain extends SubsystemBase {
     // This will get the simulated sensor readings that we set
     // in the previous article while in simulation, but will use
     // real values on the robot itself.
-    m_odometry.update(m_gyroSim.getRotation2d(),
-                      m_leftEncoderSim.getDistance(),
-                      m_rightEncoderSim.getDistance());
+    m_odometry.update(m_gyro.getRotation2d(),
+                      m_leftEncoder.getDistance(),
+                      m_rightEncoder.getDistance());
     //Updates the robot position on the field using distance measurements from encoders.
     m_field.setRobotPose(m_odometry.getPoseMeters());
     //updates what the robot did on the field periodically
@@ -123,8 +125,8 @@ public class DriveTrain extends SubsystemBase {
       // Set the inputs to the system. Note that we need to convert
   // the [-1, 1] PWM signal to voltage by multiplying it by the
   // robot controller voltage.
-    m_driveSim.setInputs(m_leftMotors.get() * RobotController.getInputVoltage(),
-    m_rightMotors.get() * RobotController.getInputVoltage());
+    m_driveSim.setInputs(m_leftMotors.get()* RobotController.getInputVoltage(), m_rightMotors.get()* RobotController.getInputVoltage());
+
     //set drivetrain to corresponding left and right voltage
 
   // Advance the model by 20 ms. Note that if you are running this
@@ -143,10 +145,12 @@ public class DriveTrain extends SubsystemBase {
 
   public void drive(double throttle, double rotate, boolean squaredInput) {
     m_differentialDrive.arcadeDrive(throttle, -rotate, squaredInput);
+    //square the input to decrease sensitivity
+
     //-rotate bc of way a controller works, when pull back the controller, it supposed to move backwards but 
     //actually the rotation is positive bc when controller pulls back it touches to the positive side
 
-    //this is why on sim we swap backwards and forwards
+    //this is why on sim we swap backwards and forwards keys
   }
 
 }

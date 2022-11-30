@@ -13,7 +13,7 @@ import frc.robot.subsystems.DriveTrain;
 public class DriveCommand extends CommandBase {
   /** Creates a new DriveCommand. */
 
-  DriveTrain m_driveTrain;
+  DriveTrain m_driveTrain;//makes drivetrain
   DoubleSupplier m_throttle;
   DoubleSupplier m_turn;
 
@@ -32,6 +32,7 @@ public class DriveCommand extends CommandBase {
   @Override
   public void execute() {
     m_driveTrain.drive(m_throttle.getAsDouble(), m_turn.getAsDouble(), true);
+    //calls driveTrain.drive, drives robot
   }
 
   // Called once the command ends or is interrupted.
