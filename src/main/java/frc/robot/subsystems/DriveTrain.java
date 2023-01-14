@@ -53,7 +53,7 @@ public class DriveTrain extends SubsystemBase {
 
   private Field2d m_field = new Field2d();
 
-  private DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(0));
+  private DifferentialDriveOdometry m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(0), 0, 0);
 
   public DriveTrain() {
     m_leftEncoder.setDistancePerPulse(Constants.ENCODER_DISTANCE_PER_PULSE);
